@@ -98,6 +98,29 @@ FROM combined
 ORDER BY follower_id
 LIMIT 10;
 
+-- An alternative method as provided by ChatGPT. Note: See recursive method in SQL
+
+WITH RECURSIVE user_path AS (
+  -- Base case: Direct followers of WilliamEagle6815
+  SELECT follower_id, 1 AS depth
+  FROM follows
+  WHERE followee_id = (
+    SELECT user_id FROM users WHERE user_name = 'WilliamEagle6815'
+  )
+  UNION ALL
+  -- Recursive step: Find followers of followers, up to 4 steps away
+  SELECT f.follower_id, up.depth + 1
+  FROM follows f
+  JOIN user_path up ON f.followee_id = up.follower_id
+  WHERE up.depth < 4
+)
+-- Select distinct followers from the user_path, excluding WilliamEagle6815
+-- to avoid cycles, if that's a concern
+SELECT DISTINCT follower_id
+FROM user_path
+ORDER BY follower_id
+LIMIT 10;
+
 /*
 Question #4: 
 Return top posters for 2023-11-30 and 2023-12-01. A top poster is a user who has the most OR second most number of posts in a given day. Include the number of posts in the result and order the result by post_date and user_id.
